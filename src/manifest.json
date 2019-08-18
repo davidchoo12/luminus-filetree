@@ -2,7 +2,12 @@
   "manifest_version": 2,
   "name": "Luminus Filetree",
   "description": "Filetree view for Luminus files",
-  "version": "1.0",
+  "version": "1.0.1",
+  "browser_specific_settings": {
+    "gecko": {
+      "update_url": "https://raw.githubusercontent.com/hidingmode/luminus-filetree/master/update-manifest.json"
+    }
+  },
 
   "permissions": [
     "activeTab",
