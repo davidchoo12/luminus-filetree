@@ -1,0 +1,11 @@
+span.fancytree-node {
+  white-space: pre;
+}
+#filetree-toggler {
+  margin-top: 0;
+}
+label[for="filetree-toggler"] {
+  font-size: 1.1em;
+  margin-bottom: 0;
+  margin-right: 20px;
+}

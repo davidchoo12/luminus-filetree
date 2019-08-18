@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+  "name": "Luminus Filetree",
+  "description": "Filetree view for Luminus files",
+  "version": "1.0",
+
+  "permissions": [
+    "activeTab",
+    "webRequest",
+    "webRequestBlocking",
+    "*://luminus.nus.edu.sg/modules/*",
+    "*://luminus.azure-api.net/*"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  }
+}
