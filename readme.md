@@ -1,31 +1,25 @@
 # Luminus Filetree
 
 ### **Only works and tested for NUS students**
-### **Currently only supports Firefox**
 
 Luminus Filetree adds a filetree view option onto the existing default files view for quicker overview of files listing. It also eases file/folder downloads by providing direct download links.
 
-This is inspired by the phased out IVLE filetree (the "Download Manager" button) and I just want to make life easier wherever I can :smile
+This is inspired by the phased out IVLE filetree (the "Download Manager" button) and I just want to make life easier wherever I can :blush:
 
 ## Installation
 
 Download from [latest release](https://github.com/hidingmode/luminus-filetree/releases/latest)
 
-For Firefox, download the .xpi file, drag and drop it into Firefox.
+For Firefox, download the .xpi file, drag and drop it into [about:addons](about:addons).
 
-For Chrome, download the .crx file, drag and drop it into Chrome.
+For Chrome, download the .crx file, drag and drop it into [chrome://extensions](chrome://extensions).
 
 ## Usage
 
-Default view
+![filetree demo](assets/filetree-demo.gif)
 
-![filetree off](assets/filetree-off.png)
-
-Click the checkbox on top right to toggle filetree.
-
-![filetree on](assets/filetree-on.png)
-
-Click on the zip links to download folders and the file names to download files.
+1. Toggle filetree using the checkbox
+2. One click to download files/folders
 
 ## Motivation
 
@@ -40,16 +34,16 @@ I used to use the filetree in IVLE a lot, allowing me to download many files eas
 ## How it works
 1. background.js is triggered when a user navigates to the files tab in Luminus
 2. background.js initiates content scripts and forwards access token (the Authorization HTTP header) to content.js
-3. content.js traverses the [files](https://luminus.portal.azure-api.net/docs/services/Files/operations/GetFiles) and [folders](https://luminus.portal.azure-api.net/docs/services/Files/operations/GetFolders), and getting download links to generate a filetree data (I wasn't aware of the [GetAllFiles](https://luminus.portal.azure-api.net/docs/services/Files/operations/GetAllFiles) operation, so this step may change)
+3. content.js traverses the [files](https://luminus.portal.azure-api.net/docs/services/Files/operations/GetFiles) and [folders](https://luminus.portal.azure-api.net/docs/services/Files/operations/GetFolders), while getting download links to generate a filetree data
 4. content.js adds html elements to the page and uses [fancytree](https://github.com/mar10/fancytree) to display the filetree
 
 ## Feature/improvement ideas
-- [ ] Try the [GetAllFiles](https://luminus.portal.azure-api.net/docs/services/Files/operations/GetAllFiles) operation, if works, replace the traversal script
 - [ ] Icons to indicate new undownloaded files (like the red icons in IVLE)
+- [ ] Cache file structure and download links in local storage to speed up loading time
 - [ ] Download all button
 - [ ] Expand/collapse all buttons
 - [ ] Table/grid view to show metadata (date modified, author, etc) in columns
-- [ ] Cache download links in local storage to speed up loading time
+- [ ] Styling fixes (background and font colors) for working with dark reader extension
 
 Feel free to submit feature requests through the issues tab.
 
