@@ -1,3 +1,4 @@
+var headers;
 function listener(requestDetails) {
   console.log('background.js triggered');
   // console.log(requestDetails);
@@ -10,11 +11,17 @@ function listener(requestDetails) {
   // let refererFilter = requestDetails.requestHeaders.filter(e => e.name == 'Referer'); // to get mod id from headers
   if (tokenFilter.length > 0 && requestDetails.method == 'GET') { // filter for only GET method calls cos requests always comes in OPTION and GET pairs, and i just need 1
     let token = tokenFilter[0].value;
+    headers = {
+      "Authorization": token,
+      "Ocp-Apim-Subscription-Key": "6963c200ca9440de8fa1eede730d8f7e",
+      "Connection": "keep-alive"
+    };
     // let moduleId = refererFilter[0].value.match(/modules\/(.{36})/)[1];
     // console.log(token);
     // console.log('executing content.js');
     browser.tabs.insertCSS({ file: 'ui.fancytree.min.css' })
     .then(() => browser.tabs.insertCSS({ file: 'custom.css' }))
+    .then(() => browser.tabs.executeScript({ file: 'browser-polyfill.min.js' }))
     .then(() => browser.tabs.executeScript({ file: 'jquery.min.js' }))
     .then(() => browser.tabs.executeScript({ file: 'jquery.fancytree-all-deps.min.js' }))
     .then(() => browser.tabs.executeScript({ file: 'content.js' }))
@@ -38,3 +45,31 @@ browser.webRequest.onBeforeSendHeaders.addListener(
   {urls: ['https://luminus.azure-api.net/files/?populate=totalFileCount%2CsubFolderCount%2CTotalSize&ParentID=*']},
   ['blocking', 'requestHeaders']
 );
+
+browser.runtime.onMessage.addListener(
+  (request, sender, sendResponse) => {
+    if (request.query == 'folders') {
+      return fetch("https://luminus.azure-api.net/files/?placeholder=1&populate=totalFileCount%2CsubFolderCount%2CTotalSize&ParentID=" + request.folderId, {
+        "headers": headers,
+        "mode": "cors"
+      }).then(res => res.json());
+    } else if (request.query == 'files') {
+      return fetch('https://luminus.azure-api.net/files/' + request.folderId + '/file?populate=Creator%2ClastUpdatedUser%2Ccomment', {
+        headers,
+        mode: 'cors'
+      }).then(res => res.json())
+    } else if (request.query == 'fileDlUrl') {
+      return fetch('https://luminus.azure-api.net/files/file/' + request.fileId + '/downloadurl', {
+        headers,
+        mode: 'cors'
+      })
+      .then(res => res.json())
+    } else if (request.query == 'folderDlUrl') {
+      return fetch('https://luminus.azure-api.net/files/' + request.folderId + '/downloadurl', {
+        headers,
+        mode: 'cors'
+      })
+      .then(res => res.json())
+    }
+  }
+)

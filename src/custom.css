@@ -9,3 +9,6 @@ label[for="filetree-toggler"] {
   margin-bottom: 0;
   margin-right: 20px;
 }
+#filetree:empty::before {
+  content: "Loading filetree...";
+}

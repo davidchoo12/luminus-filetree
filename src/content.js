@@ -4,10 +4,11 @@ console.log('content.js loaded');
 var headers;
 async function traverse(folderId) {
   // add placeholder to query string to skip background js request filter, otherwise will trigger infinite recursion
-  let folders = await fetch("https://luminus.azure-api.net/files/?placeholder=1&populate=totalFileCount%2CsubFolderCount%2CTotalSize&ParentID=" + folderId, {
-    "headers": headers,
-    "mode": "cors"
-  }).then(res => res.json())
+  // let folders = await fetch("https://luminus.azure-api.net/files/?placeholder=1&populate=totalFileCount%2CsubFolderCount%2CTotalSize&ParentID=" + folderId, {
+  //   "headers": headers,
+  //   "mode": "cors"
+  // })
+  let folders = await browser.runtime.sendMessage({ query: 'folders', folderId })
   .then(e => {
     if (e.code != '200') {
       console.log('response not ok');
@@ -15,10 +16,7 @@ async function traverse(folderId) {
     }
     return e.data;
   });
-  let files = await fetch('https://luminus.azure-api.net/files/' + folderId + '/file?populate=Creator%2ClastUpdatedUser%2Ccomment', {
-    headers,
-    mode: 'cors'
-  }).then(res => res.json())
+  let files = await browser.runtime.sendMessage({ query: 'files', folderId })
   .then(e => {
     if (e.code != '200') {
       console.log('response not ok');
@@ -27,22 +25,14 @@ async function traverse(folderId) {
     return e.data;
   });
   let filesPromises = files.map(async e => {
-    let dlUrl = await fetch('https://luminus.azure-api.net/files/file/' + e.id + '/downloadurl', {
-      headers,
-      mode: 'cors'
-    })
-    .then(res => res.json())
+    let dlUrl = await browser.runtime.sendMessage({ query: 'fileDlUrl', fileId: e.id })
     .then(body => body.data);
     // console.log({ ...e, dlUrl });
     return { key: e.id, title: e.name, dlUrl };
   });
 
   let foldersPromises = folders.map(async e => {
-    let dlUrl = e.totalSize && await fetch('https://luminus.azure-api.net/files/' + e.id + '/downloadurl', {
-      headers,
-      mode: 'cors'
-    })
-    .then(res => res.json())
+    let dlUrl = e.totalSize && await browser.runtime.sendMessage({ query: 'folderDlUrl', folderId: e.id })
     .then(body => body.data)
     .catch(console.error);
     let content = await traverse(e.id);
@@ -57,12 +47,58 @@ async function traverse(folderId) {
   return currentContent;
 }
 
+function setupUI() {
+  let parent = $('tool-content list-view'); //.empty();
+  let defaultUI = parent.children('section');
+  let filetreeUI = $('<div id="filetree" style="display:none"></div>');
+  parent.append(filetreeUI);
+  $('.breadcrumb')
+  .after('<input id="filetree-toggler" type="checkbox"><label for="filetree-toggler">File tree</label>');
+  $('#filetree-toggler').on('change', e => {
+    if (e.target.checked) {
+      defaultUI.hide();
+      filetreeUI.show();
+    } else {
+      defaultUI.show();
+      filetreeUI.hide();
+    }
+  });
+}
+// var once = true; // ensure filetree toggler 
 async function receiver(message, sender, sendResponse) {
   console.log('content.js message received');
   // if ($('#filetree-toggler').length) { // filetree initiated, do nothing
   //   console.log('filetree initiated, do nothing');
   //   return;
   // }
+  // if (!once) {
+  //   console.log('twice');
+  // }
+  let observer = new MutationObserver(ms => {
+    console.log('observer triggered');
+    let breadcrumbMutation = ms.filter(m => m.target.classList.contains('breadcrumb'));
+    if (!breadcrumbMutation.length) { // guard condition
+      return;
+    }
+    if ($('#filetree-toggler').length) {
+      console.log('filetree toggler exists, observer disconnecting');
+      observer.disconnect();
+      return;
+    }
+    let breadcrumb = breadcrumbMutation[0].target;
+    console.log(breadcrumb);
+    setupUI();
+    once = false;
+    observer.disconnect(); // ensure filetree toggler only added once
+  });
+  if ($('.breadcrumb').length) {
+    console.log('breadcrumb exists, setting up UI');
+    setupUI();
+  } else {
+    console.log('observing breadcrumb');
+    observer.observe(document.querySelector('body'), { childList: true, subtree: true });
+  }
+
   // cannot implement subfolder filetree cos cannot scrape folderId from url cos angular updates the url slower than the extension script
   // let idToTraverse;
   // let folderId = window.location.href.match(/modules\/(.{36})\/files\/(.{36})/);
@@ -82,30 +118,15 @@ async function receiver(message, sender, sendResponse) {
     "Connection": "keep-alive"
   };
   // console.log(token, moduleId);
+  // let filestructurePromise = traverse(moduleId);
   let filestructure = await traverse(moduleId);
   console.log('filestructure', filestructure);
 
-  let parent = $('tool-content list-view'); //.empty();
-  let defaultUI = parent.children('section');
-  let filetreeUI = $('<div id="filetree" style="display:none"></div>');
-  parent.append(filetreeUI);
-  $('tool-layout > .fixed-things > tool-header > .breadcrumb')
-  .after('<input id="filetree-toggler" type="checkbox"><label for="filetree-toggler">File tree</label>');
-  $('#filetree-toggler').on('change', e => {
-    if (e.target.checked) {
-      defaultUI.hide();
-      filetreeUI.show();
-    } else {
-      defaultUI.show();
-      filetreeUI.hide();
-    }
-  })
-
-
+  // $('#filetree').empty();
   $('#filetree').fancytree({
     source: filestructure,
     clickFolderMode: 2,
-    minExpandLevel: 2,
+    minExpandLevel: 5,
     renderNode: (event, data) => {
       let node = data.node;
       let dlUrl = node.data.dlUrl;
@@ -130,6 +151,7 @@ async function receiver(message, sender, sendResponse) {
       }
     }
   });
+
   browser.runtime.onMessage.removeListener(receiver); // so that listener doesnt keep repeating per message received
 }
 browser.runtime.onMessage.addListener(receiver);
