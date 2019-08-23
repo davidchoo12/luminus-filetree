@@ -10,16 +10,21 @@ This is inspired by the phased out IVLE filetree (the "Download Manager" button)
 
 Download from [latest release](https://github.com/hidingmode/luminus-filetree/releases/latest)
 
-For Firefox, download the .xpi file, drag and drop it into [about:addons](about:addons).
+For Firefox, download the .xpi file, drag and drop it into about:addons page.
 
-For Chrome, download the .crx file, drag and drop it into [chrome://extensions](chrome://extensions).
+For Chrome, download the .crx file, drag and drop it into chrome://extensions page.
+
+### Additional steps for Chrome
+For Chrome on Windows, add the extension id to the whitelist registry by running [chrome-extension-whitelist.reg](chrome-extension-whitelist.reg). Alternatively, add the extension id `dgogmggogdegmllmfjlkhcdfmecmkhac` to `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\ExtensionInstallWhitelist`.
+
+For Chrome on MacOS/Linux, follow instructions on [installing using a preferences file](https://developer.chrome.com/extensions/external_extensions#preferences), setting the `external_update_url` as `https://raw.githubusercontent.com/hidingmode/luminus-filetree/master/chrome-update-manifest.xml`.
 
 ## Usage
 
 ![filetree demo](assets/filetree-demo.gif)
 
 1. Toggle filetree using the checkbox
-2. One click to download files/folders
+2. 1-click download any files/folders
 
 ## Motivation
 

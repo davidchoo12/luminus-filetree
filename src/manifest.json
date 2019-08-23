@@ -5,11 +5,10 @@
   "version": "1.0.2",
   "browser_specific_settings": {
     "gecko": {
-      "update_url": "https://raw.githubusercontent.com/hidingmode/luminus-filetree/master/update-manifest.json"
+      "update_url": "https://raw.githubusercontent.com/hidingmode/luminus-filetree/master/firefox-update-manifest.json"
     }
   },
-  "web_accessible_resources": [ "skin-win8/*" ],
-
+  "update_url": "https://raw.githubusercontent.com/hidingmode/luminus-filetree/master/chrome-update-manifest.xml",
   "permissions": [
     "activeTab",
     "webRequest",
