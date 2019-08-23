@@ -2,6 +2,8 @@
   "addons": {
     "{7b586319-48f7-4b34-ba64-e2c9d0d39ed2}": {
       "updates": [
+        { "version": "1.0.2",
+          "update_link": "https://github.com/hidingmode/luminus-filetree/releases/download/v1.0.2/luminus_filetree-1.0.2-fx.xpi" },
       ]
     }
   }
