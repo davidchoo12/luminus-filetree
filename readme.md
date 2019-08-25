@@ -44,7 +44,7 @@ I used to use the filetree in IVLE a lot, allowing me to download many files eas
 
 ## Feature/improvement ideas
 - [ ] Icons to indicate new undownloaded files (like the red icons in IVLE)
-- [ ] Cache file structure and download links in local storage to speed up loading time
+- [x] Cache files & folders and download links in local storage to speed up loading time
 - [ ] Download all button
 - [ ] Expand/collapse all buttons
 - [ ] Table/grid view to show metadata (date modified, author, etc) in columns
