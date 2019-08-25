@@ -91,7 +91,7 @@ async function receiver(message, sender, sendResponse) {
     once = false;
     observer.disconnect(); // ensure filetree toggler only added once
   });
-  if ($('.breadcrumb').length) {
+  if ($('.breadcrumb').length && $('.breadcrumb').text().includes('Files') && !$('#filetree-toggler').length) {
     console.log('breadcrumb exists, setting up UI');
     setupUI();
   } else {
