@@ -42,30 +42,30 @@ function listener(requestDetails) {
 
 browser.webRequest.onBeforeSendHeaders.addListener(
   listener,
-  {urls: ['https://luminus.azure-api.net/files/?populate=totalFileCount%2CsubFolderCount%2CTotalSize&ParentID=*']},
+  {urls: ['https://luminus.nus.edu.sg/v2/api/files/?populate=totalFileCount%2CsubFolderCount%2CTotalSize&ParentID=*']},
   ['blocking', 'requestHeaders']
 );
 
 browser.runtime.onMessage.addListener(
   (request, sender, sendResponse) => {
     if (request.query == 'folders') {
-      return fetch("https://luminus.azure-api.net/files/?placeholder=1&populate=totalFileCount%2CsubFolderCount%2CTotalSize&ParentID=" + request.folderId, {
+      return fetch("https://luminus.nus.edu.sg/v2/api/files/?placeholder=1&populate=totalFileCount%2CsubFolderCount%2CTotalSize&ParentID=" + request.folderId, {
         "headers": headers,
         "mode": "cors"
       }).then(res => res.json());
     } else if (request.query == 'files') {
-      return fetch('https://luminus.azure-api.net/files/' + request.folderId + '/file?populate=Creator%2ClastUpdatedUser%2Ccomment', {
+      return fetch('https://luminus.nus.edu.sg/v2/api/files/' + request.folderId + '/file?populate=Creator%2ClastUpdatedUser%2Ccomment', {
         headers,
         mode: 'cors'
       }).then(res => res.json())
     } else if (request.query == 'fileDlUrl') {
-      return fetch('https://luminus.azure-api.net/files/file/' + request.fileId + '/downloadurl', {
+      return fetch('https://luminus.nus.edu.sg/v2/api/files/file/' + request.fileId + '/downloadurl', {
         headers,
         mode: 'cors'
       })
       .then(res => res.json())
     } else if (request.query == 'folderDlUrl') {
-      return fetch('https://luminus.azure-api.net/files/' + request.folderId + '/downloadurl', {
+      return fetch('https://luminus.nus.edu.sg/v2/api/files/' + request.folderId + '/downloadurl', {
         headers,
         mode: 'cors'
       })
