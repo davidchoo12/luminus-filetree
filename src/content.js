@@ -1,7 +1,6 @@
 // document.body.style.border = "5px solid red";
 console.log('content.js loaded');
 // cannot declare with let cos background.js executes content.js multiple time
-var headers;
 var contentCache = {};
 /*
 sample contentCache:
@@ -19,12 +18,8 @@ sample contentCache:
   }
 }
 */
+var newFiles = [];
 async function traverse(folderId) {
-  // add placeholder to query string to skip background js request filter, otherwise will trigger infinite recursion
-  // let folders = await fetch("https://luminus.azure-api.net/files/?placeholder=1&populate=totalFileCount%2CsubFolderCount%2CTotalSize&ParentID=" + folderId, {
-  //   "headers": headers,
-  //   "mode": "cors"
-  // })
   let folders = await browser.runtime.sendMessage({ query: 'folders', folderId })
   .then(e => {
     if (e.code != '200') {
@@ -41,41 +36,42 @@ async function traverse(folderId) {
     }
     return e.data;
   });
-  let filesPromises = files.map(async function (e) { // cannot use arrow function cos it preserves this keyword, aka cannot modify this keyword
-    let fileCache = contentCache[e.id];
+  let filesPromises = files.map(async e => {
+    // let fileCache = contentCache[e.id];
     // let fileCache = this.folderCache.find(f => f.key == e.id);
     // console.log('fileCache', fileCache);
-    let dlUrl;
-    if (fileCache && fileCache.dlUrl) {
-      dlUrl = fileCache.dlUrl;
-      // console.log('using cached file dlUrl', dlUrl);
-    } else {
-      dlUrl = await browser.runtime.sendMessage({ query: 'fileDlUrl', fileId: e.id })
-      .then(body => body.data);
-    }
+    // let dlUrl;
+    // if (fileCache && fileCache.dlUrl) {
+    //   dlUrl = fileCache.dlUrl;
+    //   // console.log('using cached file dlUrl', dlUrl);
+    // } else {
+    //   dlUrl = await browser.runtime.sendMessage({ query: 'fileDlUrl', fileId: e.id })
+    //   .then(body => body.data);
+    // }
     // console.log({ ...e, dlUrl });
-    contentCache[e.id] = { key: e.id, title: e.name, dlUrl };
+    let isNew = newFiles.findIndex(f => f.id == e.id) > -1;
+    contentCache[e.id] = { key: e.id, title: e.name, dlUrl: true, isNew };
     return contentCache[e.id];
-  }); // second arg is value to assign to this keyword in the function
+  });
 
-  let foldersPromises = folders.map(async function (e) {
-    let currFolderCache = contentCache[e.id];
+  let foldersPromises = folders.map(async e => {
+    // let currFolderCache = contentCache[e.id];
     // let currFolderCache = this.folderCache.find(f => f.key == e.id);
-    let dlUrl;
-    if (currFolderCache && currFolderCache.dlUrl) {
-      dlUrl = currFolderCache.dlUrl;
-    } else {
-      dlUrl = e.totalSize && await browser.runtime.sendMessage({ query: 'folderDlUrl', folderId: e.id })
-      .then(body => body.data)
-      .catch(console.error);
-    }
+    // let dlUrl;
+    // if (currFolderCache && currFolderCache.dlUrl) {
+    //   dlUrl = currFolderCache.dlUrl;
+    // } else {
+    //   dlUrl = e.totalSize && await browser.runtime.sendMessage({ query: 'folderDlUrl', folderId: e.id })
+    //   .then(body => body.data)
+    //   .catch(console.error);
+    // }
     // let currFolderCacheChildren = [];
     // if (currFolderCache && currFolderCache.children) {
     //   currFolderCacheChildren = currFolderCache.children;
     // }
     let content = await traverse(e.id);
     // console.log({ key: e.id, title: e.name, folder: true, children: content, dlUrl });
-    contentCache[e.id] = { key: e.id, title: e.name, folder: true, dlUrl };
+    contentCache[e.id] = { key: e.id, title: e.name, folder: true, dlUrl: e.totalSize };
     return { ...contentCache[e.id], children: content };
   });
   let currentContent = await Promise.all(foldersPromises.concat(filesPromises))
@@ -102,6 +98,7 @@ function setupUI() {
       filetreeUI.hide();
     }
   });
+  $('#filetree').append('<a id="dl">dl</a>');
 }
 
 function updateCache(moduleId, contentCache) {
@@ -156,32 +153,33 @@ async function receiver(message, sender, sendResponse) {
   //   idToTraverse = moduleId;
   // }
   // console.log('idToTraverse', idToTraverse);
-  let token = message;
-  headers = {
-    "Authorization": token,
-    "Ocp-Apim-Subscription-Key": "6963c200ca9440de8fa1eede730d8f7e",
-    "Connection": "keep-alive"
-  };
+  // let token = message;
   // console.log(token, moduleId);
   // let filestructurePromise = traverse(moduleId);
   // await browser.storage.sync.clear();
-  let moduleCache = await browser.storage.sync.get(moduleId).catch(console.error);
+
+  // loads cache
+  // let moduleCache = await browser.storage.sync.get(moduleId).catch(console.error);
   // empty cache is {}, make default as []
   // else is { (moduleId): [...] }
-  if (Object.keys(moduleCache).length && moduleCache[moduleId]) {
-    // moduleCache = moduleCache[moduleId];
-    contentCache = moduleCache[moduleId];
-    console.log(JSON.stringify(contentCache, null, 2));
-  } else {
-    moduleCache[moduleId] = [];
-    browser.storage.sync.set(moduleCache);
-  }
+  // if (Object.keys(moduleCache).length && moduleCache[moduleId]) {
+  //   contentCache = moduleCache[moduleId];
+  //   console.log('contentCache', contentCache);
+  // } else {
+  //   moduleCache[moduleId] = [];
+  //   browser.storage.sync.set(moduleCache);
+  // }
+
+  // get list of new files
+  newFiles = await browser.runtime.sendMessage({ query: 'notdownloaded', folderId: moduleId })
+  .then(body => body.data)
+  .catch(console.error);
   // console.log('contentCache', contentCache);
   let filestructure = await traverse(moduleId);
   console.log('filestructure', filestructure);
-  updateCache(moduleId, contentCache);
+  // updateCache(moduleId, contentCache);
 
-  // $('#filetree').empty();
+  // initialize filetree
   $('#filetree').fancytree({
     source: filestructure,
     clickFolderMode: 2,
@@ -193,36 +191,53 @@ async function receiver(message, sender, sendResponse) {
       if (dlUrl && !span.children('a').length) {
         if (node.folder) {
           span.append('   ');
-          let link = $('<a href="' + dlUrl + '">zip</a>');
+          let link = $('<a href="">zip</a>');
           link.on('click', async e => {
+            e.preventDefault();
             let dlUrl = await browser.runtime.sendMessage({ query: 'folderDlUrl', folderId: node.key })
             .then(body => body.data)
             .catch(console.error);
             e.target.href = dlUrl;
-            contentCache[node.key].dlUrl = dlUrl;
-            updateCache(moduleId, contentCache);
+            // contentCache[node.key].dlUrl = dlUrl;
+            // updateCache(moduleId, contentCache);
+            $('#dl').attr('href', dlUrl);
+            $('#dl')[0].click();
           });
           span.append(link);
         } else {
           span.append('   ');
-          let link = $('<a style="display:none" href="' + dlUrl + '">dl</a>');
-          link.on('click', async e => {
-            let dlUrl = await browser.runtime.sendMessage({ query: 'fileDlUrl', fileId: node.key })
-            .then(body => body.data)
-            .catch(console.error);
-            e.target.href = dlUrl;
-            contentCache[node.key].dlUrl = dlUrl;
-            updateCache(moduleId, contentCache);
-          });
-          span.append(link);
+          // let link = $('<a style="display:none" href="' + dlUrl + '">dl</a>');
+          // link.on('click', async e => {
+          //   e.preventDefault();
+          //   let dlUrl = await browser.runtime.sendMessage({ query: 'fileDlUrl', fileId: node.key })
+          //   .then(body => body.data)
+          //   .catch(console.error);
+          //   e.target.href = dlUrl;
+          //   // contentCache[node.key].dlUrl = dlUrl;
+          //   // updateCache(moduleId, contentCache);
+          //   $('#dl').attr('href', dlUrl);
+          //   $('#dl')[0].click();
+          //   span.removeClass('new');
+          // });
+          // span.append(link);
+          if (node.data.isNew) {
+            console.log(span);
+            span.addClass('new');
+          }
         }
       }
     },
-    click: (event, data) => {
+    click: async (event, data) => {
       let node = data.node;
       let dlUrl = node.data.dlUrl;
       if (!node.folder && dlUrl) {
-        $(node.span).children('a')[0].click();
+        // $(node.span).children('a')[0].click();
+        let dlUrl = await browser.runtime.sendMessage({ query: 'fileDlUrl', fileId: node.key })
+        .then(body => body.data)
+        .catch(console.error);
+        $('#dl').attr('href', dlUrl);
+        $('#dl')[0].click();
+        span.removeClass('new');
       }
     }
   });

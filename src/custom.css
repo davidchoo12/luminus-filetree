@@ -12,3 +12,10 @@ label[for="filetree-toggler"] {
 #filetree:empty::before {
   content: "Loading filetree...";
 }
+.fancytree-node.new::after {
+  content: "new";
+  color: red;
+}
+#dl {
+  display: none;
+}

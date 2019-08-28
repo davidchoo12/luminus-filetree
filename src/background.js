@@ -49,9 +49,10 @@ browser.webRequest.onBeforeSendHeaders.addListener(
 browser.runtime.onMessage.addListener(
   (request, sender, sendResponse) => {
     if (request.query == 'folders') {
-      return fetch("https://luminus.nus.edu.sg/v2/api/files/?placeholder=1&populate=totalFileCount%2CsubFolderCount%2CTotalSize&ParentID=" + request.folderId, {
-        "headers": headers,
-        "mode": "cors"
+      // add placeholder to query string to skip background js request filter, otherwise will trigger infinite recursion
+      return fetch('https://luminus.nus.edu.sg/v2/api/files/?placeholder=1&populate=totalFileCount%2CsubFolderCount%2CTotalSize&ParentID=' + request.folderId, {
+        headers,
+        mode: 'cors'
       }).then(res => res.json());
     } else if (request.query == 'files') {
       return fetch('https://luminus.nus.edu.sg/v2/api/files/' + request.folderId + '/file?populate=Creator%2ClastUpdatedUser%2Ccomment', {
@@ -66,6 +67,12 @@ browser.runtime.onMessage.addListener(
       .then(res => res.json())
     } else if (request.query == 'folderDlUrl') {
       return fetch('https://luminus.nus.edu.sg/v2/api/files/' + request.folderId + '/downloadurl', {
+        headers,
+        mode: 'cors'
+      })
+      .then(res => res.json())
+    } else if (request.query == 'notdownloaded') {
+      return fetch('https://luminus.nus.edu.sg/v2/api/files/notdownloaded?ParentID=' + request.folderId, {
         headers,
         mode: 'cors'
       })
