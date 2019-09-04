@@ -2,7 +2,7 @@
   "manifest_version": 2,
   "name": "Luminus Filetree",
   "description": "Filetree view for Luminus files",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "icons": {
     "96": "icon96.png"
   },
