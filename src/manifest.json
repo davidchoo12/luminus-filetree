@@ -3,6 +3,9 @@
   "name": "Luminus Filetree",
   "description": "Filetree view for Luminus files",
   "version": "1.0.2",
+  "icons": {
+    "96": "icon96.png"
+  },
   "browser_specific_settings": {
     "gecko": {
       "id": "{7b586319-48f7-4b34-ba64-e2c9d0d39ed2}",
