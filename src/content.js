@@ -71,7 +71,7 @@ async function traverse(folderId) {
     // }
     let content = await traverse(e.id);
     // console.log({ key: e.id, title: e.name, folder: true, children: content, dlUrl });
-    contentCache[e.id] = { key: e.id, title: e.name, folder: true, dlUrl: e.totalSize };
+    contentCache[e.id] = { key: e.id, title: e.name, folder: true, dlUrl: e.totalSize, expanded: true };
     return { ...contentCache[e.id], children: content };
   });
   let currentContent = await Promise.all(foldersPromises.concat(filesPromises))
@@ -88,7 +88,7 @@ function setupUI() {
   let filetreeUI = $('<div id="filetree" style="display:none"></div>');
   parent.append(filetreeUI);
   $('.breadcrumb')
-  .after('<input id="filetree-toggler" type="checkbox"><label for="filetree-toggler">File tree</label>');
+  .after('<label for="filetree-toggler">File tree</label><input id="filetree-toggler" type="checkbox"><label class="toggler-switch" for="filetree-toggler"></label>');
   $('#filetree-toggler').on('change', e => {
     if (e.target.checked) {
       defaultUI.hide();
@@ -98,14 +98,27 @@ function setupUI() {
       filetreeUI.hide();
     }
   });
-  $('#filetree').append('<a id="dl">dl</a>');
 }
 
-function updateCache(moduleId, contentCache) {
-  let moduleCache = {};
-  moduleCache[moduleId] = contentCache;
-  browser.storage.sync.set(moduleCache).catch(console.error);
+// function updateCache(moduleId, contentCache) {
+//   let moduleCache = {};
+//   moduleCache[moduleId] = contentCache;
+//   browser.storage.sync.set(moduleCache).catch(console.error);
+// }
+
+function download(url, filename) {
+  $('#dl').attr('href', url);
+  $('#dl').attr('download', filename);
+  $('#dl')[0].click();
 }
+
+function disableNewFilesDlButtons() {
+  $('#dlNew').attr('disabled', true);
+  $('#dlNew').attr('title', 'No new files to download');
+  $('#dlNewUnzip').attr('disabled', true);
+  $('#dlNewUnzip').attr('title', 'No new files to download');
+}
+
 // var once = true; // ensure filetree toggler 
 async function receiver(message, sender, sendResponse) {
   console.log('content.js message received');
@@ -174,16 +187,26 @@ async function receiver(message, sender, sendResponse) {
   newFiles = await browser.runtime.sendMessage({ query: 'notdownloaded', folderId: moduleId })
   .then(body => body.data)
   .catch(console.error);
+  console.log('newFiles', newFiles);
   // console.log('contentCache', contentCache);
   let filestructure = await traverse(moduleId);
   console.log('filestructure', filestructure);
   // updateCache(moduleId, contentCache);
 
   // initialize filetree
-  $('#filetree').fancytree({
+  let filetreeUI = $('#filetree');
+  filetreeUI.append('<a id="dl">dl</a>');
+  filetreeUI.append('<button id="dlNew" class="dlBtn">Download New Files</button><button id="dlNewUnzip" class="dlBtn">Download New Files (unzipped)</button><button id="dlAll" class="dlBtn">Download All</button>');
+  if (!filestructure.length) {
+    $('#dlAll').attr('disabled', true);
+    $('#dlAll').attr('title', 'No files to download');
+  }
+  if (!newFiles.length) {
+    disableNewFilesDlButtons();
+  }
+  filetreeUI.fancytree({
     source: filestructure,
     clickFolderMode: 2,
-    minExpandLevel: 5,
     renderNode: (event, data) => {
       let node = data.node;
       let dlUrl = node.data.dlUrl;
@@ -191,17 +214,17 @@ async function receiver(message, sender, sendResponse) {
       if (dlUrl && !span.children('a').length) {
         if (node.folder) {
           span.append('   ');
-          let link = $('<a href="">zip</a>');
+          let link = $('<a class="zip">zip</a>');
           link.on('click', async e => {
             e.preventDefault();
             let dlUrl = await browser.runtime.sendMessage({ query: 'folderDlUrl', folderId: node.key })
             .then(body => body.data)
             .catch(console.error);
-            e.target.href = dlUrl;
+            // e.target.href = dlUrl;
             // contentCache[node.key].dlUrl = dlUrl;
             // updateCache(moduleId, contentCache);
-            $('#dl').attr('href', dlUrl);
-            $('#dl')[0].click();
+            download(dlUrl);
+            span.next().find('span.new').removeClass('new'); // set children files as not new
           });
           span.append(link);
         } else {
@@ -221,7 +244,6 @@ async function receiver(message, sender, sendResponse) {
           // });
           // span.append(link);
           if (node.data.isNew) {
-            console.log(span);
             span.addClass('new');
           }
         }
@@ -235,12 +257,67 @@ async function receiver(message, sender, sendResponse) {
         let dlUrl = await browser.runtime.sendMessage({ query: 'fileDlUrl', fileId: node.key })
         .then(body => body.data)
         .catch(console.error);
-        $('#dl').attr('href', dlUrl);
-        $('#dl')[0].click();
+        download(dlUrl);
         span.removeClass('new');
+      } else if (node.folder && event.originalEvent.target.classList.contains('zip')) {
+        event.preventDefault();
       }
     }
   });
+
+  // $('#dlAll').attr('disabled', false);
+  // $('#dlNew').attr('disabled', false);
+
+  // download all handler
+  $('#dlAll').on('click', async e => {
+    let requestBody = JSON.stringify({
+      fileIds: filestructure.filter(e => !e.folder).map(e => e.key),
+      folderIds: filestructure.filter(e => e.folder).map(e => e.key),
+      preserveFolder: true
+    });
+    let dlUrl = await browser.runtime.sendMessage({ query: 'downloadSelectedUrl', moduleId, body: requestBody })
+    .then(body => body.data)
+    .catch(console.error);
+    download(dlUrl);
+    $('.new').removeClass('new');
+  });
+
+  // download new files handler
+  $('#dlNew').on('click', async e => {
+    if (!newFiles.length) {
+      return;
+    }
+    let requestBody = JSON.stringify({
+      fileIds: newFiles.map(e => e.id),
+      folderIds: [],
+      preserveFolder: true
+    });
+    let dlUrl = await browser.runtime.sendMessage({ query: 'filesDlUrl', moduleId, body: requestBody })
+    .then(body => body.data)
+    .catch(console.error);
+    download(dlUrl, moduleId + ' new files');
+    $('.new').removeClass('new');
+    disableNewFilesDlButtons();
+  });
+
+  // download new files unzipped handler
+  $('#dlNewUnzip').on('click', async e => {
+    if (!newFiles.length) {
+      return;
+    }
+    for (e of newFiles) {
+      let dlUrl = await browser.runtime.sendMessage({ query: 'fileDlUrl', fileId: e.id })
+      .then(body => body.data)
+      .catch(console.error);
+      download(dlUrl);
+    }
+    $('.new').removeClass('new');
+    disableNewFilesDlButtons();
+    newFiles = await browser.runtime.sendMessage({ query: 'notdownloaded', folderId: moduleId })
+    .then(body => body.data)
+    .catch(console.error);
+  });
+
 
   browser.runtime.onMessage.removeListener(receiver); // so that listener doesnt keep repeating per message received
 }

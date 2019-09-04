@@ -2,12 +2,49 @@ span.fancytree-node {
   white-space: pre;
 }
 #filetree-toggler {
-  margin-top: 0;
+  /*margin-top: 0;*/
+  display: none;
+}
+#filetree-toggler + .toggler-switch {
+  box-sizing: border-box;
+  outline: 0;
+  display: inline-block;
+  width: 4em;
+  height: 2em;
+  position: relative;
+  margin-right: 20px;
+  cursor: pointer;
+  -webkit-user-select: none;
+     -moz-user-select: none;
+      -ms-user-select: none;
+          user-select: none;
+  background: #343a40;
+  border-radius: 2em;
+  padding: 2px;
+  transition: all 0.4s ease;
+}
+#filetree-toggler + .toggler-switch:after {
+  position: relative;
+  display: block;
+  content: "";
+  width: 50%;
+  height: 100%;
+  left: 0;
+  border-radius: 50%;
+  background: white;
+  transition: all 0.2s ease;
+}
+#filetree-toggler:checked + .toggler-switch {
+  background: #28a745
+}
+#filetree-toggler:checked + .toggler-switch:after {
+  left: 50%;
 }
 label[for="filetree-toggler"] {
   font-size: 1.1em;
   margin-bottom: 0;
-  margin-right: 20px;
+  margin-right: 5px;
+  cursor: pointer;
 }
 #filetree:empty::before {
   content: "Loading filetree...";
@@ -18,4 +55,32 @@ label[for="filetree-toggler"] {
 }
 #dl {
   display: none;
+}
+.dlBtn {
+  display: inline-block;
+  padding: 0.7em 1.7em;
+  margin-right: 0.5em;
+  margin-bottom: 0.5em;
+  border: none;
+  border-radius: 0.3em;
+  box-sizing: border-box;
+  text-decoration: none;
+  font-weight: bold;
+  color: white;
+  box-shadow:inset 0 -0.6em 1em -0.35em rgba(0,0,0,0.17),inset 0 0.6em 2em -0.3em rgba(255,255,255,0.15),inset 0 0 0em 0.05em rgba(255,255,255,0.12);
+  text-align:center;
+  position:relative;
+}
+.dlBtn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+#dlAll {
+  background: #007bff;
+}
+#dlNew {
+  background: #28a745;
+}
+#dlNewUnzip {
+  background: #17a2b8;
 }

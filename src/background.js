@@ -13,8 +13,7 @@ function listener(requestDetails) {
     let token = tokenFilter[0].value;
     headers = {
       "Authorization": token,
-      "Ocp-Apim-Subscription-Key": "6963c200ca9440de8fa1eede730d8f7e",
-      "Connection": "keep-alive"
+      "Ocp-Apim-Subscription-Key": "6963c200ca9440de8fa1eede730d8f7e"
     };
     // let moduleId = refererFilter[0].value.match(/modules\/(.{36})/)[1];
     // console.log(token);
@@ -58,25 +57,42 @@ browser.runtime.onMessage.addListener(
       return fetch('https://luminus.nus.edu.sg/v2/api/files/' + request.folderId + '/file?populate=Creator%2ClastUpdatedUser%2Ccomment', {
         headers,
         mode: 'cors'
-      }).then(res => res.json())
+      }).then(res => res.json());
     } else if (request.query == 'fileDlUrl') {
       return fetch('https://luminus.nus.edu.sg/v2/api/files/file/' + request.fileId + '/downloadurl', {
         headers,
         mode: 'cors'
       })
-      .then(res => res.json())
+      .then(res => res.json());
     } else if (request.query == 'folderDlUrl') {
       return fetch('https://luminus.nus.edu.sg/v2/api/files/' + request.folderId + '/downloadurl', {
         headers,
         mode: 'cors'
       })
-      .then(res => res.json())
+      .then(res => res.json());
     } else if (request.query == 'notdownloaded') {
       return fetch('https://luminus.nus.edu.sg/v2/api/files/notdownloaded?ParentID=' + request.folderId, {
         headers,
-        mode: 'cors'
+        mode: 'cors',
+        cache: 'no-cache'
       })
-      .then(res => res.json())
+      .then(res => res.json());
+    } else if (request.query == 'downloadSelectedUrl') {
+      return fetch('https://luminus.nus.edu.sg/v2/api/files/' + request.moduleId + '/downloadurl', {
+        method: 'post',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        mode: 'cors',
+        body: request.body
+      })
+      .then(res => res.json());
+    } else if (request.query == 'filesDlUrl') {
+      return fetch('https://luminus.nus.edu.sg/v2/api/files/file/downloadurl', {
+        method: 'post',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        mode: 'cors',
+        body: request.body
+      })
+      .then(res => res.json());
     }
   }
 )
