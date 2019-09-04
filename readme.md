@@ -43,9 +43,8 @@ I used to use the filetree in IVLE a lot, allowing me to download many files eas
 4. content.js adds html elements to the page and uses [fancytree](https://github.com/mar10/fancytree) to display the filetree
 
 ## Feature/improvement ideas
-- [ ] Icons to indicate new undownloaded files (like the red icons in IVLE)
-- [x] Cache files & folders and download links in local storage to speed up loading time
-- [ ] Download all button
+- [x] Icons to indicate new undownloaded files (like the red icons in IVLE)
+- [x] Download all button
 - [ ] Expand/collapse all buttons
 - [ ] Table/grid view to show metadata (date modified, author, etc) in columns
 - [ ] Styling fixes (background and font colors) for working with dark reader extension
