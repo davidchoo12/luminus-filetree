@@ -2,7 +2,7 @@
 
 ### **Only works and tested for NUS students**
 
-Luminus Filetree adds a filetree view option onto the existing default files view for quicker overview of files listing. It also eases file/folder downloads by providing direct download links.
+Luminus Filetree adds a filetree view option onto the existing default files view for quicker overview of files listing. It also eases file/folder downloads by allowing one click download.
 
 This is inspired by the phased out IVLE filetree (the "Download Manager" button) and I just want to make life easier wherever I can :blush:
 
