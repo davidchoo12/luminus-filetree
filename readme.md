@@ -17,7 +17,7 @@ For Chrome, download the .crx file, drag and drop it into chrome://extensions pa
 ### Additional steps for Chrome
 For Chrome on Windows, add the extension id to the whitelist registry by running [chrome-extension-whitelist.reg](chrome-extension-whitelist.reg). Alternatively, add the extension id `dgogmggogdegmllmfjlkhcdfmecmkhac` to `HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Google\Chrome\ExtensionInstallWhitelist`.
 
-For Chrome on MacOS/Linux, follow instructions on [installing using a preferences file](https://developer.chrome.com/extensions/external_extensions#preferences), setting the `external_update_url` as `https://raw.githubusercontent.com/hidingmode/luminus-filetree/master/chrome-update-manifest.xml`.
+For Chrome on MacOS/Linux, follow instructions on [installing using a preferences file](https://developer.chrome.com/extensions/external_extensions#preferences), setting the `external_update_url` as `https://raw.githubusercontent.com/davidchoo12/luminus-filetree/master/chrome-update-manifest.xml`.
 
 ## Usage
 
